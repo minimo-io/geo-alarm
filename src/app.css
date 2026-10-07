@@ -40,6 +40,17 @@
 	--panel-bottom: calc(env(safe-area-inset-bottom, 0px) * 0.5);
 }
 
+/*
+ * Phones report a large bottom safe area in the installed PWA (iPhone home bar).
+ * Half of it looked empty, so drop the extra on touch screens: the card keeps its
+ * own 12px padding. Desktop and mobile browsers compute ~0px either way, unchanged.
+ */
+@media (pointer: coarse) {
+	:root {
+		--panel-bottom: 0px;
+	}
+}
+
 html,
 body {
 	height: 100%;

@@ -85,14 +85,11 @@
 						</svg>
 					</button>
 				</div>
-				<div class="flex justify-end gap-2">
-					<button class="btn btn-sm border-neutral-content/40 bg-transparent text-neutral-content" onclick={dismiss}>
-						Not now
-					</button>
-					{#if deferred}
+				{#if deferred}
+					<div class="flex justify-end">
 						<button class="btn btn-secondary btn-sm" onclick={install}>Install app</button>
-					{/if}
-				</div>
+					</div>
+				{/if}
 			</div>
 		</div>
 	</div>
