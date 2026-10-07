@@ -1,0 +1,68 @@
+@import 'tailwindcss';
+
+@plugin 'daisyui' {
+	themes: geoalarm --default;
+}
+
+/* Deep-sea teal base with a single signal colour (the alarm zone). */
+@plugin 'daisyui/theme' {
+	name: 'geoalarm';
+	default: true;
+	color-scheme: light;
+	--color-base-100: oklch(97% 0.012 175);
+	--color-base-200: oklch(93% 0.016 175);
+	--color-base-300: oklch(87% 0.02 175);
+	--color-base-content: oklch(24% 0.04 180);
+	--color-primary: oklch(36% 0.07 185);
+	--color-primary-content: oklch(97% 0.012 175);
+	--color-secondary: oklch(66% 0.19 40);
+	--color-secondary-content: oklch(18% 0.04 40);
+	--color-accent: oklch(66% 0.19 40);
+	--color-accent-content: oklch(18% 0.04 40);
+	--color-neutral: oklch(26% 0.05 185);
+	--color-neutral-content: oklch(95% 0.01 175);
+	--color-info: oklch(62% 0.12 235);
+	--color-success: oklch(62% 0.14 160);
+	--color-warning: oklch(80% 0.15 80);
+	--color-error: oklch(58% 0.22 27);
+	--radius-selector: 1rem;
+	--radius-field: 0.5rem;
+	--radius-box: 1rem;
+	--border: 1px;
+}
+
+html,
+body {
+	height: 100%;
+	overscroll-behavior: none;
+}
+
+/* Pulse used on the alarm zone while the phone is inside it */
+@keyframes zone-pulse {
+	0%, 100% { fill-opacity: 0.4; }
+	50% { fill-opacity: 0.1; }
+}
+.zone-inside {
+	animation: zone-pulse 1.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+	.zone-inside { animation: none; }
+}
+
+.pin {
+	width: 26px;
+	height: 26px;
+	border-radius: 50% 50% 50% 0;
+	background: var(--color-secondary);
+	border: 3px solid white;
+	box-shadow: 0 2px 6px rgb(0 0 0 / 0.35);
+	transform: rotate(-45deg);
+}
+.me-dot {
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: var(--color-info);
+	border: 3px solid white;
+	box-shadow: 0 0 0 2px var(--color-info), 0 1px 4px rgb(0 0 0 / 0.4);
+}
