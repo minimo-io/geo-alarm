@@ -31,6 +31,15 @@
 	--border: 1px;
 }
 
+/*
+ * Space under the bottom panels. In the installed app (standalone) iOS reports a ~34px
+ * safe area for the home indicator; most of it is empty, so we only use part of it.
+ * Tune the 0.5 factor if you want it tighter (0) or looser (1).
+ */
+:root {
+	--panel-bottom: calc(env(safe-area-inset-bottom, 0px) * 0.5);
+}
+
 html,
 body {
 	height: 100%;

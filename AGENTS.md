@@ -21,7 +21,7 @@ This is the original brief for the project, verbatim. Treat it as the source of 
 - **Points** (`Zone` in `src/lib/alarm.svelte.ts`) have `id`, `name`, `lat`, `lng`, `radius`, `enabled`. They persist in `localStorage` (`geoalarm:zones:v1`).
 - Placing a point is two steps: tap the map (draft, dashed) then **Add point**. The alarm is a single global on/off over all points with `enabled === true`.
 - Disabled points stay visible (greyed, dashed) in the sidebar and on the map and are ignored by `activeZones` / `insideZones`. Never delete a point just because it is disabled.
-- **Beep**: a real in-page sound (`src/lib/beep.ts`, Web Audio, no asset) played alongside each notification when `alarm.soundEnabled`. Toggle + Test button live in `ZonesPanel.svelte`; the choice persists (`geoalarm:sound:v1`). Audio must be unlocked by a tap, so `arm()` and the Test button call `unlockAudio()` synchronously first. The beep is independent of notification permission, so it still works if notifications are blocked.
+- **Beep**: a real in-page sound played alongside each notification when `alarm.soundEnabled`. `src/lib/beep.ts` generates a WAV at runtime and plays it through an `<audio>` element (not Web Audio: iOS mutes Web Audio with the silent switch and often "interrupts" its context). It also sets `navigator.audioSession.type = 'playback'` where supported. The first `play()` must come from a tap, so `arm()`, the Beep toggle and the Test button all call `playBeep()` synchronously in the click handler; timers can replay it afterwards. `playBeep()` resolves `false` when blocked and the sidebar shows a hint. Toggle + Test live in `ZonesPanel.svelte`; the choice persists (`geoalarm:sound:v1`). The beep is independent of notification permission.
 - One notification per 10 s tick, even if inside several points (it lists their names).
 - The sidebar (`ZonesPanel.svelte`) opens from the right; it has a backdrop on phones only (`md:hidden`).
 
@@ -64,6 +64,12 @@ npm run build      # must succeed before you finish
 - Leaflet is imported dynamically inside `onMount` (the app runs with `ssr = false`, but keep it safe).
 - Keep OSM attribution visible. Do not bulk-prefetch tiles (OSM tile usage policy); the service worker only caches tiles the user has viewed (max 300).
 
+## UI details learned the hard way
+
+- Bottom panels use `var(--panel-bottom)` (defined in `src/app.css`), only about half of `env(safe-area-inset-bottom)`. The full inset left too much empty space in the installed iPhone app. Don't switch back to the raw inset.
+- On dark surfaces (the install card is `bg-neutral`) don't use `btn-ghost`: its text colour is dark and the button disappears. Set `text-neutral-content` and a visible border explicitly.
+- The install card must always be closable (✕, "Not now" and Escape) and must never show when running as an installed app (`standalone`, `fullscreen` or `minimal-ui`).
+
 ## Constraints to keep in mind
 
 - Web apps cannot geolocate in the background. Do not promise it in UI copy. The wake lock only keeps the screen on while the alarm is armed.
@@ -86,4 +92,5 @@ npm run build      # must succeed before you finish
 - [ ] Beep plays with each notification; the sidebar toggle silences it and persists after reload
 - [ ] Test button beeps (and only when the toggle is on)
 - [ ] "Until I leave" keeps notifying until the phone is outside the point
-- [ ] Install card appears, closes, and does not reappear after dismissal
+- [ ] Install card appears, the ✕ and "Not now" are clearly visible and close it, and it does not reappear after dismissal
+- [ ] In the installed app the install card never shows and the bottom panel has no big empty strip

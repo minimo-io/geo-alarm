@@ -20,9 +20,9 @@
 
 <section
 	class="card absolute inset-x-0 bottom-0 z-[500] mx-auto w-full max-w-md rounded-b-none bg-base-100 shadow-2xl"
-	style="padding-bottom: env(safe-area-inset-bottom)"
+	style="padding-bottom: var(--panel-bottom)"
 >
-	<div class="card-body gap-3 p-4">
+	<div class="card-body gap-3 p-4 pb-3">
 		{#if alarm.armed}
 			<div class="flex items-center justify-between gap-3">
 				<div class="min-w-0">

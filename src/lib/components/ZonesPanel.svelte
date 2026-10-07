@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { alarm, type Zone } from '../alarm.svelte';
 	import { formatMeters } from '../geo';
-	import { playBeep, unlockAudio } from '../beep';
+	import { playBeep } from '../beep';
 
 	let {
 		open,
@@ -10,6 +10,8 @@
 	}: { open: boolean; onclose: () => void; onfocus: (zone: Zone) => void } = $props();
 
 	const insideIds = $derived(new Set(alarm.insideZones.map((z) => z.id)));
+	let testFailed = $state(false);
+
 	const ringingIds = $derived(new Set(alarm.ringingZones.map((z) => z.id)));
 </script>
 
@@ -27,7 +29,7 @@
 	class="fixed inset-y-0 right-0 z-[800] flex w-80 max-w-[88vw] flex-col bg-base-100 shadow-2xl transition-transform duration-200 motion-reduce:transition-none {open
 		? 'translate-x-0'
 		: 'translate-x-full'}"
-	style="padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom)"
+	style="padding-top: env(safe-area-inset-top); padding-bottom: var(--panel-bottom)"
 	aria-label="Alarm points"
 	inert={!open}
 >
@@ -41,24 +43,36 @@
 		<button class="btn btn-ghost btn-sm btn-circle" onclick={onclose} aria-label="Close points panel">✕</button>
 	</header>
 
-	<div class="flex items-center justify-between gap-3 border-b border-base-300 px-4 py-3">
-		<label class="flex flex-1 cursor-pointer items-center gap-3">
-			<input type="checkbox" class="toggle toggle-secondary" bind:checked={alarm.soundEnabled} />
-			<span>
-				<span class="block font-semibold">Beep</span>
-				<span class="block text-sm opacity-70">Sound with each notification</span>
-			</span>
-		</label>
-		<button
-			class="btn btn-outline btn-sm"
-			disabled={!alarm.soundEnabled}
-			onclick={() => {
-				unlockAudio();
-				playBeep();
-			}}
-		>
-			Test
-		</button>
+	<div class="space-y-2 border-b border-base-300 px-4 py-3">
+		<div class="flex items-center justify-between gap-3">
+			<label class="flex flex-1 cursor-pointer items-center gap-3">
+				<input
+					type="checkbox"
+					class="toggle toggle-secondary"
+					bind:checked={alarm.soundEnabled}
+					onchange={() => {
+						// Turning it on is a tap, which also lets the browser allow sound later.
+						if (alarm.soundEnabled) playBeep();
+					}}
+				/>
+				<span>
+					<span class="block font-semibold">Beep</span>
+					<span class="block text-sm opacity-70">Sound with each notification</span>
+				</span>
+			</label>
+			<button
+				class="btn btn-outline btn-sm"
+				disabled={!alarm.soundEnabled}
+				onclick={async () => (testFailed = !(await playBeep()))}
+			>
+				Test
+			</button>
+		</div>
+		{#if testFailed}
+			<p class="text-sm text-error" role="alert">
+				The browser blocked the sound. Raise the volume and, on iPhone, check the ring/silent switch.
+			</p>
+		{/if}
 	</div>
 
 	<div class="flex-1 overflow-y-auto p-3">

@@ -1,6 +1,6 @@
 import { distanceMeters, type LatLng } from './geo';
 import { ensureNotificationPermission, notify } from './notify';
-import { playBeep, unlockAudio } from './beep';
+import { playBeep } from './beep';
 
 export type LocationPermission = 'checking' | 'prompt' | 'granted' | 'denied' | 'unsupported';
 
@@ -210,8 +210,9 @@ class GeoAlarm {
 	async arm() {
 		if (this.armed || this.activeZones.length === 0) return;
 
-		// Browsers only allow sound after a tap, so unlock audio before anything async.
-		unlockAudio();
+		// Browsers only allow sound after a tap, so play the first beep right now, before any
+		// await. It doubles as a "the alarm is on" confirmation.
+		if (this.soundEnabled) void playBeep();
 
 		// Needs a user gesture, which is why arm() is called from the button.
 		const perm = await ensureNotificationPermission();
@@ -266,7 +267,7 @@ class GeoAlarm {
 
 		if (ringing.length && now - this.#lastNotifyAt >= NOTIFY_EVERY_MS) {
 			this.#lastNotifyAt = now;
-			if (this.soundEnabled) playBeep();
+			if (this.soundEnabled) void playBeep();
 			const names = ringing.map((z) => z.name);
 			notify(
 				names.length > 1 ? `You are inside ${names.length} alarm areas` : `You are inside ${names[0]}`,
@@ -289,10 +290,7 @@ class GeoAlarm {
 
 	/** Wake locks are released when the tab is hidden; take it again on return. */
 	onVisible() {
-		if (this.armed && document.visibilityState === 'visible') {
-			this.#requestWakeLock();
-			unlockAudio(); // iOS suspends audio while the page is hidden
-		}
+		if (this.armed && document.visibilityState === 'visible') this.#requestWakeLock();
 	}
 }
 

@@ -20,7 +20,7 @@
 4. The **points panel** (☰ button, top right) slides in from the right and lists every point, on or off. Each one has a name, a radius slider, an **on/off toggle**, Show on map and Delete. Off points stay on the map, greyed out, and never trigger the alarm.
 5. **Start alarm** arms every point that is on. The alarm stays armed until the user turns it off. Toggling a point off while armed takes effect immediately.
 6. When the phone **enters** a point, the alarm fires: a notification right away, then **every 10 seconds** (naming the points) for the **Notify for** time (30 s, 1 min, 5 min, 15 min, or until the user leaves the area). After that it goes quiet for that point. Leaving and re-entering fires it again.
-7. Each time it notifies, it also plays a **beep** (three rising tones made with the Web Audio API, no sound file). The points panel has a **Beep** toggle and a **Test** button. The choice is remembered. Beeps only sound while the app is open, which is also when the 10 second loop runs.
+7. Each time it notifies, it also plays a **beep** (three rising tones generated at runtime and played through an audio element, no sound file). The points panel has a **Beep** toggle and a **Test** button. The choice is remembered. Beeps only sound while the app is open, which is also when the 10 second loop runs.
 8. A closable hint invites the user to install the app as a PWA.
 
 ## Stack (checked October 2026)
@@ -61,6 +61,7 @@ So Chrome is not strictly required, but it gives the smoothest one-tap install.
 - Browsers **cannot track location in the background**. The 10 second notifications only run while the app is open and the screen is on. While the alarm is armed the app requests a **screen wake lock** to keep going.
 - Truly background geofencing needs a native app (Capacitor or similar). That is the natural next step if this is not enough.
 - Notification sounds/vibration vary by OS and browser settings.
+- **iPhone sound:** the in-app beep needs the volume up. It is built to play even with the ring/silent switch on (iOS 16.4+), but if you hear nothing, use the **Test** button in the points panel; it tells you when the browser blocks the sound. Audio can't play while the screen is locked or the app is in the background.
 
 ## Project layout
 
@@ -72,7 +73,7 @@ src/
     alarm.svelte.ts            All state: permission, position, zone, alarm timer
     geo.ts                     Haversine distance, formatting
     notify.ts                  Notification permission + showNotification
-    beep.ts                    Web Audio beep (needs a tap to unlock)
+    beep.ts                    Generated WAV beep played via <audio> (needs a tap first)
     components/
       AlarmMap.svelte          Leaflet map, saved points, draft point, user dot
       ControlPanel.svelte      New point radius, "Notify for", Add point / Start / Turn off
