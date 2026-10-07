@@ -125,6 +125,11 @@ class GeoAlarm {
 		if (this.#persisting) return;
 		this.#persisting = true;
 		$effect.root(() => {
+			// Armed requires at least one enabled point: turning off (or deleting) the last
+			// one while armed turns the alarm back off.
+			$effect(() => {
+				if (this.armed && this.activeZones.length === 0) this.disarm();
+			});
 			$effect(() => {
 				const json = JSON.stringify(this.zones); // reads every field => reacts to any edit
 				try {
@@ -210,9 +215,10 @@ class GeoAlarm {
 	async arm() {
 		if (this.armed || this.activeZones.length === 0) return;
 
-		// Browsers only allow sound after a tap, so play the first beep right now, before any
-		// await. It doubles as a "the alarm is on" confirmation.
-		if (this.soundEnabled) void playBeep();
+		// Browsers only allow sound after a tap, so beep right now, before any await, but only
+		// when this tap actually fires (standing inside an enabled point). Otherwise arming
+		// stays silent: a beep with no notification reads as a phantom fire.
+		if (this.soundEnabled && this.insideZones.length > 0) void playBeep();
 
 		// Needs a user gesture, which is why arm() is called from the button.
 		const perm = await ensureNotificationPermission();
