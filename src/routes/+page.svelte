@@ -38,6 +38,14 @@
 			>
 				◎
 			</button>
+			<button
+				class="btn btn-circle btn-neutral shadow-lg"
+				onclick={() => map?.fitAll()}
+				aria-label="Fit all points on map"
+				disabled={alarm.zones.length === 0 && !alarm.draft}
+			>
+				⤢
+			</button>
 		</div>
 
 		<ControlPanel onradius={() => map?.fitDraft()} />

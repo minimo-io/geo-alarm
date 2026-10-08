@@ -2,3 +2,14 @@ node_modules
 .svelte-kit
 build
 .DS_Store
+
+# Android release signing (never commit the key or its passwords)
+*.keystore
+*.jks
+keystore.properties
+local.properties
+
+# Android generated output (rebuilds locally)
+android/app/build
+android/.gradle
+android/capacitor-cordova-android-plugins/build

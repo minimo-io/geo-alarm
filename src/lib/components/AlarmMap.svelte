@@ -33,6 +33,8 @@
 				start,
 				alarm.position ? 16 : 2
 			);
+			// Classic white +/- control, top left (app buttons live top right).
+			L.control.zoom({ position: 'topleft' }).addTo(map);
 
 			L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 				maxZoom: 19,
@@ -159,6 +161,18 @@
 	}
 	export function centerOnMe() {
 		if (alarm.position && map) map.setView([alarm.position.lat, alarm.position.lng], Math.max(map.getZoom(), 16));
+	}
+	/** Zoom the view so every saved point (and the draft, if any) is visible. */
+	export function fitAll() {
+		if (!map || !L) return;
+		const bounds = L.latLngBounds([]);
+		for (const z of alarm.zones) {
+			const layer = layers.get(z.id);
+			if (layer) bounds.extend(layer.circle.getBounds());
+			else bounds.extend([z.lat, z.lng]);
+		}
+		if (alarm.draft) bounds.extend([alarm.draft.lat, alarm.draft.lng]);
+		if (bounds.isValid()) map.fitBounds(bounds, { padding: [60, 60], maxZoom: 18 });
 	}
 </script>
 

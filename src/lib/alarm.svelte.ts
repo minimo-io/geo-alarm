@@ -1,6 +1,7 @@
 import { distanceMeters, type LatLng } from './geo';
 import { ensureNotificationPermission, notify } from './notify';
 import { playBeep } from './beep';
+import { startPositionDelivery } from './location-provider';
 
 export type LocationPermission = 'checking' | 'prompt' | 'granted' | 'denied' | 'unsupported';
 
@@ -57,7 +58,7 @@ class GeoAlarm {
 	inside = $derived(this.insideZones.length > 0);
 	ringingZones = $derived(this.insideZones.filter((z) => this.ringingIds.includes(z.id)));
 
-	#watchId: number | null = null;
+	#stopDelivery: (() => void) | null = null;
 	#ticker: ReturnType<typeof setInterval> | null = null;
 	#wakeLock: WakeLockSentinel | null = null;
 	#lastNotifyAt = 0;
@@ -165,27 +166,26 @@ class GeoAlarm {
 	}
 
 	#startWatching() {
-		if (this.#watchId !== null) return;
-		this.#watchId = navigator.geolocation.watchPosition(
-			(p) => {
-				this.permission = 'granted';
-				this.position = {
-					lat: p.coords.latitude,
-					lng: p.coords.longitude,
-					accuracy: p.coords.accuracy
-				};
-			},
-			(err) => {
-				if (err.code === err.PERMISSION_DENIED) this.permission = 'denied';
-			},
-			{ enableHighAccuracy: true, maximumAge: 2_000, timeout: 20_000 }
-		);
+		if (this.#stopDelivery !== null) return;
+		// Web: plain watchPosition. Native shell: background watcher (foreground
+		// service), so fixes keep arriving with the app backgrounded.
+		void startPositionDelivery((pos) => {
+			this.permission = 'granted';
+			this.position = pos;
+		}).then((stop) => {
+			this.#stopDelivery = stop;
+		});
 	}
 
 	// ---------- points ----------
 
 	setDraft(c: LatLng) {
 		this.draft = c;
+	}
+
+	/** Discard the point being placed without saving it. */
+	clearDraft() {
+		this.draft = null;
 	}
 
 	/** Save the draft as a new, enabled point. */

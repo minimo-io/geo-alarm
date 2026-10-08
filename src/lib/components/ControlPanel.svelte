@@ -1,8 +1,19 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { alarm, NOTIFY_EVERY_MS } from '../alarm.svelte';
 	import { formatMeters } from '../geo';
+	import { isNative } from '../location-provider';
+	import NativeSetup from './NativeSetup.svelte';
 
 	let { onradius }: { onradius?: () => void } = $props();
+
+	onMount(() => {
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === 'Escape' && alarm.draft && !alarm.armed) alarm.clearDraft();
+		};
+		window.addEventListener('keydown', onKey);
+		return () => window.removeEventListener('keydown', onKey);
+	});
 
 	const durations = [
 		{ label: 'Until I leave', value: 0 },
@@ -23,6 +34,9 @@
 	style="padding-bottom: var(--panel-bottom)"
 >
 	<div class="card-body gap-3 p-4 pb-3">
+		{#if isNative()}
+			<NativeSetup />
+		{/if}
 		{#if alarm.armed}
 			<div class="flex items-center justify-between gap-3">
 				<div class="min-w-0">
@@ -56,9 +70,9 @@
 			{#if alarm.notificationsDenied}
 				<div role="alert" class="alert alert-warning alert-soft text-sm">
 					{#if alarm.soundEnabled}
-						Notifications are blocked. Allow them in your browser settings. The beep still sounds while this screen is open.
+						Notifications are blocked. Allow them {isNative() ? 'in the app settings' : 'in your browser settings'}. The beep still sounds while this screen is open.
 					{:else}
-						Notifications are blocked and the beep is off, so the alarm will stay silent. Allow notifications in your browser settings or turn the beep on in the points panel.
+						Notifications are blocked and the beep is off, so the alarm will stay silent. Allow notifications {isNative() ? 'in the app settings' : 'in your browser settings'} or turn the beep on in the points panel.
 					{/if}
 				</div>
 			{/if}
@@ -109,6 +123,11 @@
 					Start alarm
 				</button>
 			</div>
+			{#if alarm.draft}
+				<button class="btn btn-ghost btn-sm self-center text-error" onclick={() => alarm.clearDraft()}>
+					Discard point
+				</button>
+			{/if}
 		{/if}
 	</div>
 </section>

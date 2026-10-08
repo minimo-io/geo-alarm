@@ -56,10 +56,44 @@ Geolocation, notifications and service workers require **HTTPS** (or `localhost`
 
 So Chrome is not strictly required, but it gives the smoothest one-tap install.
 
+## Android app (Capacitor)
+
+The same static build wrapped in a native Android shell, for alerts that keep working with
+the app closed. The web PWA is untouched and always works without any of this.
+
+You need three things, however they are installed on your machine: **JDK 21** (`java -version`
+shows 21 — Capacitor 8 refuses anything else), the **Android SDK** with platform-tools plus one
+platform plus build-tools (`sdkmanager --version`, `adb devices`), and an **emulator image matching
+your CPU** (arm64 on Apple Silicon, x86_64 on Intel/AMD). Two env vars point at the first two;
+their values differ per machine. Install from official sources (Android Studio or Google's
+cmdline tools plus a Temurin/Adoptium JDK).
+
+```sh
+npm run build              # static site in ./build (the shell serves this)
+npx cap sync android       # must run from the repo root, never from android/
+# inside android/:
+./gradlew assembleDebug    # debug APK for testing
+./gradlew bundleRelease    # signed Play bundle (needs the key below)
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+Test background alerts: arm the alarm, press HOME, teleport the emulator GPS
+(`adb emu geo fix <lon> <lat>`). Far away stays quiet; back inside fires within seconds.
+
+**The signing keys, plainly:** two files, `android/geoalarm-release.keystore` and
+`android/keystore.properties`. Both are gitignored and never pushed. Debug and local testing
+never use them. They matter only at the first Play Store upload — from then on, losing them
+means never updating the app again. Back up the password in a password manager; regenerating
+is safe any time before that first upload.
+
+**Moving machines:** hand-copy those two key files (or regenerate pre-Play), reinstall the
+toolchain plus `npm install`; everything else regenerates (emulator images, `build/`, Gradle
+caches, `node_modules`).
+
 ## Known limitations of a web app
 
 - Browsers **cannot track location in the background**. The 10 second notifications only run while the app is open and the screen is on. While the alarm is armed the app requests a **screen wake lock** to keep going.
-- Truly background geofencing needs a native app (Capacitor or similar). That is the natural next step if this is not enough.
+- Truly background geofencing needs a native app — that is the Android shell above.
 - Notification sounds/vibration vary by OS and browser settings.
 - **iPhone sound:** the in-app beep needs the volume up. It is built to play even with the ring/silent switch on (iOS 16.4+), but if you hear nothing, use the **Test** button in the points panel; it tells you when the browser blocks the sound. Audio can't play while the screen is locked or the app is in the background.
 
@@ -72,9 +106,12 @@ src/
   lib/
     alarm.svelte.ts            All state: permission, position, zone, alarm timer
     geo.ts                     Haversine distance, formatting
-    notify.ts                  Notification permission + showNotification
+    notify.ts                  Notification permission + showNotification (web) or local-notifications (native shell)
     beep.ts                    Generated WAV beep played via <audio> (needs a tap first)
+    location-provider.ts       Position source: web watchPosition or native background watcher
+    native-setup.ts            Native shell permissions (background location, battery exemption)
     components/
+      NativeSetup.svelte       Native shell permission prompts (Android only)
       AlarmMap.svelte          Leaflet map, saved points, draft point, user dot
       ControlPanel.svelte      New point radius, "Notify for", Add point / Start / Turn off
       ZonesPanel.svelte        Right sidebar: all points, on/off toggle, rename, radius, delete
@@ -82,4 +119,6 @@ src/
       InstallHint.svelte       Closable PWA install card
   routes/                      +layout.ts (ssr off), +layout.svelte, +page.svelte
 static/                        manifest.webmanifest, icons
+android/                       Capacitor shell (committed: manifest, sound, icons, platform code)
+capacitor.config.ts            Shell config: webDir build, legacy bridge, notification sound
 ```

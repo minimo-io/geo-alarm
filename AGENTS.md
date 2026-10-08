@@ -53,6 +53,34 @@ npm run build      # must succeed before you finish
 - `@vite-pwa/sveltekit` is not compatible with Kit 3; the PWA is hand-written. Do not add it unless its peer range includes Kit 3.
 - Keep TypeScript on 6.x until `svelte-check` supports 7.
 
+## Capacitor Android shell
+
+Same static build inside a native Android shell for background alerts. Web PWA behaviour must
+stay byte-identical; branch at runtime with `isNative()` (`src/lib/location-provider.ts`).
+Scope is Android only. No iOS work in this repo.
+
+- Commands: `npm run build`, `npx cap sync android`, `./gradlew assembleDebug bundleRelease`
+  (inside `android/`, JDK 21 env). Release signing applies only when `keystore.properties` exists.
+- `npx cap sync android` runs from the repo root only. Anywhere else it prints a docs link and
+  copies nothing, and Gradle then packages stale assets. Distrust the APK timestamp: verify with
+  `unzip -p app-debug.apk assets/public/... | grep -a <marker>`.
+- After failed Gradle builds, up-to-date checks lie (`mergeDebugAssets UP-TO-DATE` with changed
+  inputs). `rm -rf app/build` and rebuild when the APK timestamp doesn't move.
+- `android.useLegacyBridge: true` is required: without it location updates die ~5 min after
+  backgrounding (`@capacitor-community/background-geolocation` README).
+- Every scheduled alert passes `isExactNotification: false`. Android 12+ parks exact ones on the
+  Alarms & reminders settings screen and the call never resolves.
+- `ACCESS_BACKGROUND_LOCATION` cannot be adb-granted; the in-app flow opens system settings.
+- `pm clear <pkg>` before retest builds: the service worker cache survives reinstall and serves
+  the old bundle, mimicking impossible bugs.
+- Debug the shell over Chrome DevTools Protocol (`webview_devtools_remote_<pid>`; the page id
+  changes every launch; Node 24 has a global WebSocket client for inline `node -e` scripts).
+  `input tap` misses bottom-card taps; click via CDP instead. `grep -a` on minified bundles/APKs.
+  `dumpsys notification` matches by id/channel (titles are length-redacted).
+- Keys: never commit (`*.keystore`, `keystore.properties` are ignored). PKCS12 ignores a separate
+  keypass, so keypass == storepass. One key signs all releases; the Play checklist lives in
+  `docs/play-listing.md`.
+
 ## Conventions
 
 - Svelte 5 runes only. No legacy `$:` or stores.
