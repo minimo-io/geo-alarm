@@ -123,10 +123,12 @@ Scope is Android only. No iOS work in this repo.
 - [ ] Install card appears, the ✕ and "Not now" are clearly visible and close it, and it does not reappear after dismissal
 - [ ] In the installed app the install card never shows and the bottom panel has no big empty strip
 
-## Commit messages
+## Commits, pushes, and version bumps
 
 - Start every commit message with `AGENT: `.
 - Use a short plain summary in repo history style; state scope and result.
+- Never suggest or plan a version bump, commit, or push on your own. The user
+  always gives those instructions; wait for them.
 
 ## General Guidelines
 

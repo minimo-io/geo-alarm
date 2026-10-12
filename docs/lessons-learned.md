@@ -59,3 +59,5 @@
 
 - `README.md` → `## Android app` owns Dev (`npx cap run`) vs Production (`bundleRelease`).
   `AGENTS.md` keeps only gotchas and points to it. Never duplicate command lists.
+- Agent commit rules live in `AGENTS.md` → `## Commits, pushes, and version bumps`:
+  `AGENT: ` prefix, short plain summaries, and bump/commit/push only on user instruction.
