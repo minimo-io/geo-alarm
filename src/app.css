@@ -86,3 +86,9 @@ body {
 	border: 3px solid white;
 	box-shadow: 0 0 0 2px var(--color-info), 0 1px 4px rgb(0 0 0 / 0.4);
 }
+
+/* Keep Leaflet zoom below the status bar / cutout (viewport-fit=cover). Matches right buttons. */
+.leaflet-top.leaflet-left {
+	top: max(0.75rem, env(safe-area-inset-top));
+	left: max(0px, env(safe-area-inset-left, 0px));
+}

@@ -68,17 +68,28 @@ your CPU** (arm64 on Apple Silicon, x86_64 on Intel/AMD). Two env vars point at 
 their values differ per machine. Install from official sources (Android Studio or Google's
 cmdline tools plus a Temurin/Adoptium JDK).
 
+### Dev: run on local emulator
+
 ```sh
-npm run build              # static site in ./build (the shell serves this)
-npx cap sync android       # must run from the repo root, never from android/
-# inside android/:
-./gradlew assembleDebug    # debug APK for testing
-./gradlew bundleRelease    # signed Play bundle (needs the key below)
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+npx cap run android --list   # show emulator targets
+adb shell pm clear io.minimo.geoalarm  # clear cache, else old code shows
+npm run build                # static site in ./build (the shell serves this)
+npx cap run android --target Pixel_9   # syncs, builds debug, installs, starts
 ```
+
+`run` already syncs and calls Gradle. No separate `sync` or `assembleDebug` in dev.
+Each new shell needs JDK 21 first: `export JAVA_HOME` to your JDK 21
+(Android Studio bundle works). `java -version` must show 21.
 
 Test background alerts: arm the alarm, press HOME, teleport the emulator GPS
 (`adb emu geo fix <lon> <lat>`). Far away stays quiet; back inside fires within seconds.
+
+### Production: release bundle
+
+```sh
+# inside android/, JDK 21 env:
+./gradlew assembleRelease bundleRelease    # signed Play bundle (needs the key below)
+```
 
 **The signing keys, plainly:** two files, `android/geoalarm-release.keystore` and
 `android/keystore.properties`. Both are gitignored and never pushed. Debug and local testing

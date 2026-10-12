@@ -46,3 +46,16 @@
   the payload looks exact. Immediate alerts must pass `isExactNotification: false`.
 - Custom notification sound: `res/raw/<name>.wav` + `sound` in capacitor config and per call.
   Android 8+ locks the channel sound at creation — reinstall/`pm clear` to hear changes.
+
+## Map safe-area (Oct 2026)
+
+- `viewport-fit=cover` puts web content under the status bar / cutout. App buttons already
+  offset with `top-[max(0.75rem,env(safe-area-inset-top))]`, but Leaflet's `topleft` zoom
+  control has only its own 10px margin. Override `.leaflet-top.leaflet-left` in `app.css`
+  with the same `max(0.75rem, env(safe-area-inset-top))` top plus `env(safe-area-inset-left)`.
+  Higher specificity (0,2,0) beats Leaflet's `.leaflet-top`, so no `!important` needed.
+
+## Docs: single source for run commands (Oct 2026)
+
+- `README.md` → `## Android app` owns Dev (`npx cap run`) vs Production (`bundleRelease`).
+  `AGENTS.md` keeps only gotchas and points to it. Never duplicate command lists.

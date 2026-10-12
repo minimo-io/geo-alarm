@@ -59,8 +59,8 @@ Same static build inside a native Android shell for background alerts. Web PWA b
 stay byte-identical; branch at runtime with `isNative()` (`src/lib/location-provider.ts`).
 Scope is Android only. No iOS work in this repo.
 
-- Commands: `npm run build`, `npx cap sync android`, `./gradlew assembleDebug bundleRelease`
-  (inside `android/`, JDK 21 env). Release signing applies only when `keystore.properties` exists.
+- Run commands live in `README.md` → `## Android app` (Dev vs Production). Do not
+  duplicate them here. Release signing applies only when `keystore.properties` exists.
 - `npx cap sync android` runs from the repo root only. Anywhere else it prints a docs link and
   copies nothing, and Gradle then packages stale assets. Distrust the APK timestamp: verify with
   `unzip -p app-debug.apk assets/public/... | grep -a <marker>`.
@@ -122,6 +122,11 @@ Scope is Android only. No iOS work in this repo.
 - [ ] "Until I leave" keeps notifying until the phone is outside the point
 - [ ] Install card appears, the ✕ and "Not now" are clearly visible and close it, and it does not reappear after dismissal
 - [ ] In the installed app the install card never shows and the bottom panel has no big empty strip
+
+## Commit messages
+
+- Start every commit message with `AGENT: `.
+- Use a short plain summary in repo history style; state scope and result.
 
 ## General Guidelines
 
