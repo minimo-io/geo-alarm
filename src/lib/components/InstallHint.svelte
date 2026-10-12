@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { isNative } from '../location-provider';
 
 	const KEY = 'geoalarm:install-hint-dismissed';
 
@@ -8,6 +9,8 @@
 	let ios = $state(false);
 
 	onMount(() => {
+		// Native shell (Android or iOS): already an app, never show the hint.
+		if (isNative()) return;
 		// Already installed / running as an app: never show the hint.
 		const standalone =
 			['standalone', 'fullscreen', 'minimal-ui'].some((m) => matchMedia(`(display-mode: ${m})`).matches) ||

@@ -57,7 +57,6 @@ npm run build      # must succeed before you finish
 
 Same static build inside a native Android shell for background alerts. Web PWA behaviour must
 stay byte-identical; branch at runtime with `isNative()` (`src/lib/location-provider.ts`).
-Scope is Android only. No iOS work in this repo.
 
 - Run commands live in `README.md` → `## Android app` (Dev vs Production). Do not
   duplicate them here. Release signing applies only when `keystore.properties` exists.
@@ -80,6 +79,25 @@ Scope is Android only. No iOS work in this repo.
 - Keys: never commit (`*.keystore`, `keystore.properties` are ignored). PKCS12 ignores a separate
   keypass, so keypass == storepass. One key signs all releases; the Play checklist lives in
   `docs/play-listing.md`.
+
+## Capacitor iOS shell
+
+Same static build inside a native iOS shell (`ios/`, committed like `android/`).
+Run commands live in `README.md` → `## iOS app`. Do not duplicate them here.
+
+- Requires macOS + Xcode. Simulator needs no signing; device and App Store builds do.
+- Location keys + `UIBackgroundModes: location` live in `ios/App/App/Info.plist`
+  (per `@capacitor-community/background-geolocation` README). Bundle ID comes from
+  `capacitor.config.ts` `appId` at `cap add` time.
+- Plugins resolve through Swift Package Manager (`CapApp-SPM`); CocoaPods is not used.
+  Broken system `pod` installs do not block iOS work.
+- Verify headless with `xcodebuild -project ios/App/App.xcodeproj -scheme App
+  -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17' build`.
+  Use an installed simulator name (`simctl list devices`); stale names fail lookup.
+- Simulator location is simulated (Xcode Features → Location menu). It proves UI and
+  foreground alerts, not real background GPS.
+- `xcrun simctl uninstall booted <bundle-id>` before retest builds: reinstall keeps the
+  service-worker cache like Android, serving the old bundle.
 
 ## Conventions
 

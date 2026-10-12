@@ -36,7 +36,7 @@
 		{#if !bgGranted}
 			<div class="flex items-center justify-between gap-2">
 				<span>Location all the time</span>
-				<button class="btn btn-warning btn-sm" onclick={() => void openAppSettings()}>
+				<button class="btn btn-warning btn-sm" onclick={() => void openAppSettings().finally(() => refresh())}>
 					Allow all the time
 				</button>
 			</div>
@@ -46,7 +46,7 @@
 				<span>Battery optimization off</span>
 				<button
 					class="btn btn-warning btn-sm"
-					onclick={() => void NativeSetup.requestIgnoreBatteryOptimizations()}
+					onclick={() => void NativeSetup.requestIgnoreBatteryOptimizations().finally(() => refresh())}
 				>
 					Disable optimization
 				</button>

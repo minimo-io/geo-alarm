@@ -1,4 +1,4 @@
-package io.minimo.geoalarm;
+package lat.cubiq.geoalarm;
 
 import android.Manifest;
 import android.content.Context;

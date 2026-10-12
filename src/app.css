@@ -51,6 +51,15 @@
 	}
 }
 
+/*
+ * Native shells are coarse pointers too, so the rule above zeroes their padding
+ * and the drawer buttons sit on the bottom edge. Give native a 12px floor while
+ * still clearing real home-indicator insets. Web PWA and desktop are unchanged.
+ */
+html.native {
+	--panel-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+}
+
 html,
 body {
 	height: 100%;

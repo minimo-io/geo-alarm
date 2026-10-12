@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { alarm, NOTIFY_EVERY_MS } from '../alarm.svelte';
 	import { formatMeters } from '../geo';
-	import { isNative } from '../location-provider';
+	import { isAndroid, isNative } from '../location-provider';
 	import NativeSetup from './NativeSetup.svelte';
 
 	let { onradius }: { onradius?: () => void } = $props();
@@ -34,7 +34,7 @@
 	style="padding-bottom: var(--panel-bottom)"
 >
 	<div class="card-body gap-3 p-4 pb-3">
-		{#if isNative()}
+		{#if isAndroid()}
 			<NativeSetup />
 		{/if}
 		{#if alarm.armed}

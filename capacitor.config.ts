@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-	appId: 'io.minimo.geoalarm',
+	appId: 'lat.cubiq.geoalarm',
 	appName: 'Geo Alarm',
 	webDir: 'build',
 	android: {

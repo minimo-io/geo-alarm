@@ -1,4 +1,4 @@
-# Play Store release pack — Geo Alarm (`io.minimo.geoalarm`)
+# Play Store release pack — Geo Alarm (`lat.cubiq.geoalarm`)
 
 ## Build
 

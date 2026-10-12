@@ -7,10 +7,10 @@ if (keystorePropsFile.exists()) {
 }
 
 android {
-    namespace = "io.minimo.geoalarm"
+    namespace = "lat.cubiq.geoalarm"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "io.minimo.geoalarm"
+        applicationId "lat.cubiq.geoalarm"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

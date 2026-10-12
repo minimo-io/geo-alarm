@@ -61,3 +61,39 @@
   `AGENTS.md` keeps only gotchas and points to it. Never duplicate command lists.
 - Agent commit rules live in `AGENTS.md` → `## Commits, pushes, and version bumps`:
   `AGENT: ` prefix, short plain summaries, and bump/commit/push only on user instruction.
+
+## App identity rename (Oct 2026)
+
+- `applicationId` lives in 7 code spots: `capacitor.config.ts` `appId`,
+  `app/build.gradle` `namespace` + `applicationId`, `strings.xml` `package_name` +
+  `custom_url_scheme`, and the Java folder path + `package` lines (moved with `git mv`).
+  `AndroidManifest.xml` needs no edit (uses `${applicationId}` and `.MainActivity`).
+- After rename: `npx cap sync android` (keeps edits), `./gradlew assembleDebug`,
+  then verify with `aapt dump badging app-debug.apk | grep ^package` (macOS `strings`
+  cannot read the UTF-16 binary manifest; `grep -a` on it proves nothing).
+- Docs mention the ID too: `docs/play-listing.md` title, `README.md` `pm clear` example.
+
+## Capacitor iOS shell (Oct 2026)
+
+- `npx cap add ios` needs `@capacitor/ios` installed first (`npm install @capacitor/ios@^8`).
+  Bundle ID comes from `capacitor.config.ts` `appId` at add time — rename the ID before adding.
+- All three plugins ship `Package.swift`, so `npx cap sync ios` uses SPM and never calls
+  `pod`. A broken system CocoaPods does not matter.
+- `cap add` does not write location keys. Add them to `ios/App/App/Info.plist` by hand
+  (both `NSLocation*UsageDescription` strings + `UIBackgroundModes: location`).
+- No `.xcworkspace` exists; build the `.xcodeproj` directly with `xcodebuild -scheme App`.
+  Simulator name must match an installed device or destination lookup fails.
+- `cap run ios --target` takes a simulator UDID (`simctl list devices`), not a name.
+  Names work on Android only.
+- Permission rows must refresh after the settings call settles, not only on
+  `visibilitychange`: system permission prompts are overlay dialogs, the page never
+  hides, so chain `.finally(() => refresh())` on both NativeSetup buttons.
+- `InstallHint` must early-return on `isNative()`: `display-mode: standalone` never
+  matches in a native WebView, and the iOS UA would otherwise fire the Home Screen toast.
+- `NativeSetup` UI is Android-only: gate it behind `isAndroid()`. The plugin has no iOS
+  implementation, so every check rejects and its rows can never clear on iOS.
+- iOS `AppIcon.appiconset` needs a real 1024 universal icon (from `static/icons/icon-512.png`,
+  full-bleed, not the maskable). `cap add` leaves Capacitor's stock icon in place.
+- Native drawer padding: coarse-pointer media query zeroes `--panel-bottom`, and native
+  shells are coarse pointers. Flag them with `html.native` (toggled in `+layout.svelte`)
+  giving a `max(12px, safe-area)` floor; web PWA and desktop unchanged.

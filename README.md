@@ -72,7 +72,7 @@ cmdline tools plus a Temurin/Adoptium JDK).
 
 ```sh
 npx cap run android --list   # show emulator targets
-adb shell pm clear io.minimo.geoalarm  # clear cache, else old code shows
+adb shell pm clear lat.cubiq.geoalarm  # clear cache, else old code shows
 npm run build                # static site in ./build (the shell serves this)
 npx cap run android --target Pixel_9   # syncs, builds debug, installs, starts
 ```
@@ -100,6 +100,27 @@ is safe any time before that first upload.
 **Moving machines:** hand-copy those two key files (or regenerate pre-Play), reinstall the
 toolchain plus `npm install`; everything else regenerates (emulator images, `build/`, Gradle
 caches, `node_modules`).
+
+## iOS app (Capacitor)
+
+The same static build wrapped in a native iOS shell. Needs macOS with Xcode.
+The Simulator needs no paid account or signing.
+
+```sh
+xcrun simctl list devices available   # names + UDIDs
+xcrun simctl uninstall booted lat.cubiq.geoalarm  # clear cache, else old code shows
+npm run build
+npx cap run ios --target <UDID>       # UDID only, names fail
+```
+
+`run` already syncs. No separate `sync` in dev (only for manual `xcodebuild` flows).
+
+Location keys and the background mode live in `ios/App/App/Info.plist`
+(`NSLocationWhenInUseUsageDescription`,
+`NSLocationAlwaysAndWhenInUseUsageDescription`, `UIBackgroundModes: location`).
+Plugins resolve through Swift Package Manager — no CocoaPods needed.
+Simulate movement in the Simulator via Features → Location → Custom Location.
+The Simulator proves UI and foreground alerts, not real background GPS.
 
 ## Known limitations of a web app
 

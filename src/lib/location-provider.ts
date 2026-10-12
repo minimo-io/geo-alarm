@@ -16,6 +16,11 @@ export function isNative(): boolean {
 	return Capacitor.isNativePlatform();
 }
 
+/** True only on Android. The NativeSetup plugin is Android-only Java. */
+export function isAndroid(): boolean {
+	return Capacitor.getPlatform() === 'android';
+}
+
 /**
  * Deliver position fixes to `onpos`. Web uses `watchPosition` (unchanged
  * behaviour); native uses the background-geolocation watcher, which keeps
