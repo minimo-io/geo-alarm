@@ -88,6 +88,18 @@
 - Permission rows must refresh after the settings call settles, not only on
   `visibilitychange`: system permission prompts are overlay dialogs, the page never
   hides, so chain `.finally(() => refresh())` on both NativeSetup buttons.
+- Native cold start must probe permission silently: `navigator.permissions.query` throws
+  in WebViews, so `init()` branches on `isNative()` and uses `probeNativePermission()`
+  (`addWatcher` with `requestPermissions: false` — granted delivers a fix, denied rejects
+  on Android, iOS stays quiet until a 2.5 s timeout). Always `removeWatcher` afterwards.
+- TestFlight silent alerts: check the silent switch, volume, and per-app Sounds setting
+  before hunting code. A muted phone is the common cause.
+- Sidebar version comes straight from `package.json` (`import { version }`), no extra
+  dependency. The footer lives inside the panel's safe-area padding.
+- Saved map pins are interactive with a `click` → `fitBounds` (same as sidebar Show on map).
+  Capture `circle`/`pin` in consts: TS loses narrowing inside the closure otherwise.
+- Beep interval is user-set (`notifyEverySec`, persisted, default 10): validate loaded values
+  against the options list, and update every "every 10 seconds" sentence in docs when it changes.
 - `InstallHint` must early-return on `isNative()`: `display-mode: standalone` never
   matches in a native WebView, and the iOS UA would otherwise fire the Home Screen toast.
 - `NativeSetup` UI is Android-only: gate it behind `isAndroid()`. The plugin has no iOS

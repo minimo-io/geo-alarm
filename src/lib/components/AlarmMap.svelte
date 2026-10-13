@@ -99,8 +99,14 @@
 			if (!layer) {
 				layer = {
 					circle: L.circle(ll, zoneStyle(z)).addTo(map),
-					pin: L.marker(ll, { icon: pinIcon(), interactive: false, keyboard: false }).addTo(map)
+					pin: L.marker(ll, { icon: pinIcon() }).addTo(map)
 				};
+				// Tapping a saved pin focuses it, same as "Show on map" in the sidebar.
+				// Marker taps never reach the map, so no draft is placed here.
+				const { circle, pin } = layer;
+				pin.on('click', () => {
+					if (map) map.fitBounds(circle.getBounds(), { padding: [60, 60], maxZoom: 18 });
+				});
 				layers.set(z.id, layer);
 			} else {
 				layer.circle.setLatLng(ll).setRadius(z.radius).setStyle(zoneStyle(z));

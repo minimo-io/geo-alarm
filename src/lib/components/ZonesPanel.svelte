@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { alarm, type Zone } from '../alarm.svelte';
+	import { alarm, NOTIFY_EVERY_OPTIONS, type Zone } from '../alarm.svelte';
 	import { formatMeters } from '../geo';
 	import { playBeep } from '../beep';
+	import { version } from '../../../package.json';
 
 	let {
 		open,
@@ -68,6 +69,14 @@
 				Test
 			</button>
 		</div>
+		<label class="flex items-center justify-between gap-3">
+			<span class="text-sm font-semibold">Beep every</span>
+			<select class="select select-sm w-auto" bind:value={alarm.notifyEverySec} aria-label="Seconds between notifications">
+				{#each NOTIFY_EVERY_OPTIONS as s}
+					<option value={s}>{s} seconds</option>
+				{/each}
+			</select>
+		</label>
 		{#if testFailed}
 			<p class="text-sm text-error" role="alert">
 				The browser blocked the sound. Raise the volume and, on iPhone, check the ring/silent switch.
@@ -142,4 +151,6 @@
 			</ul>
 		{/if}
 	</div>
+
+	<footer class="border-t border-base-300 p-3 text-right text-xs tabular-nums opacity-60">v{version}</footer>
 </aside>

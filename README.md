@@ -2,7 +2,17 @@
 
 ## Goal
 
+Geo Alarm is a GPS location alarm: draw areas on a map and get notified, with a beep,
+when you enter them. It ships as an installable web app (PWA) plus native Android
+and iOS shells that keep alerting with the app closed. Everything runs on-device:
+no account, no server.
+
+<details>
+<summary>Original brief (verbatim)</summary>
+
 > Hey i need to create a pwa app (svekte -latest version, check the web + tailwind + daisyui). It will allow a simple thing, show a openstreet map add a pointer and a radius and (draw it on the map of for simplifity on mobile add the radio value. That will paint an area on the map and "set it". If the location of the user mobile phone gets inside that area it will send a notification each 10 seconds for the time the "geo alarm" is on, or for a configured set of seconds. For this to work the user must share location when the app starts else it won't work and we show insteaf of the map a "share location" message. This must be a pwa from the start so we must suggest the user, in a some cool nice way, like a closable tooltip to save it as a pwa (i think they will need chrome for this but i am not sure). That is the main purpose of this app. Create a mock project with this exact prompt in the AGENTS.md file and in the README.md file as the goal or description of this project.
+
+</details>
 
 ## Follow-up requests
 
@@ -14,14 +24,14 @@
 
 ## What it does
 
-1. On start, the app asks the user to share their location. Until they do, the map is replaced by a **Share location** screen.
+1. On start, the app needs your location. On the web, a **Share location** screen covers the map until you accept. In the native shells the app checks silently: if you already allowed it, the map opens straight away.
 2. The user taps the map to drop a pointer and picks a **radius** with a slider (works well on mobile). The area is painted on the map. **Add point** saves it.
 3. Any number of points can be saved. They are stored on the device and survive a reload.
-4. The **points panel** (☰ button, top right) slides in from the right and lists every point, on or off. Each one has a name, a radius slider, an **on/off toggle**, Show on map and Delete. Off points stay on the map, greyed out, and never trigger the alarm.
+4. The **points panel** (☰ button, top right) slides in from the right and lists every point, on or off. Each one has a name, a radius slider, an **on/off toggle**, Show on map and Delete. Off points stay on the map, greyed out, and never trigger the alarm. The panel footer shows the app version.
 5. **Start alarm** arms every point that is on. The alarm stays armed until the user turns it off. Toggling a point off while armed takes effect immediately.
-6. When the phone **enters** a point, the alarm fires: a notification right away, then **every 10 seconds** (naming the points) for the **Notify for** time (30 s, 1 min, 5 min, 15 min, or until the user leaves the area). After that it goes quiet for that point. Leaving and re-entering fires it again.
-7. Each time it notifies, it also plays a **beep** (three rising tones generated at runtime and played through an audio element, no sound file). The points panel has a **Beep** toggle and a **Test** button. The choice is remembered. Beeps only sound while the app is open, which is also when the 10 second loop runs.
-8. A closable hint invites the user to install the app as a PWA.
+6. When the phone **enters** a point, the alarm fires: a notification right away, then repeatedly (naming the points) for the **Notify for** time (30 s, 1 min, 5 min, 15 min, or until the user leaves the area). The repeat interval is set in the points panel (**Beep every**, default 10 s) and remembered. After that it goes quiet for that point. Leaving and re-entering fires it again.
+7. Each notification also plays a **beep**. In the app it plays through an audio element (needs a tap first, foreground only); in the native shells the bundled beep sound also plays with the notification while backgrounded. The points panel has a **Beep** toggle and a **Test** button that silence both. The choice is remembered.
+8. On the web, a closable hint invites the user to install the app as a PWA. Native shells never show it — they are already apps.
 
 ## Stack (checked October 2026)
 
@@ -33,6 +43,8 @@
 | Tailwind CSS | 4.3 | Via `@tailwindcss/vite`, CSS-first config in `src/app.css` |
 | daisyUI | 5.7 | `@plugin "daisyui"` with a custom `geoalarm` theme |
 | Leaflet | 1.9 | OpenStreetMap tiles |
+| Capacitor | 8 | Native Android + iOS shells around the same build (SPM plugins on iOS) |
+| Background location | 1.2 | `@capacitor-community/background-geolocation` watcher in native shells |
 | TypeScript | 6 | `svelte-check` does not support TS 7 yet |
 
 PWA is hand-rolled (`static/manifest.webmanifest` + `src/service-worker.ts`) because `@vite-pwa/sveltekit` does not support SvelteKit 3 yet.
@@ -121,13 +133,14 @@ Location keys and the background mode live in `ios/App/App/Info.plist`
 Plugins resolve through Swift Package Manager — no CocoaPods needed.
 Simulate movement in the Simulator via Features → Location → Custom Location.
 The Simulator proves UI and foreground alerts, not real background GPS.
+Beta builds go out through TestFlight internal testing.
 
 ## Known limitations of a web app
 
 - Browsers **cannot track location in the background**. The 10 second notifications only run while the app is open and the screen is on. While the alarm is armed the app requests a **screen wake lock** to keep going.
-- Truly background geofencing needs a native app — that is the Android shell above.
+- Truly background geofencing needs a native app — that is the Android and iOS shells above.
 - Notification sounds/vibration vary by OS and browser settings.
-- **iPhone sound:** the in-app beep needs the volume up. It is built to play even with the ring/silent switch on (iOS 16.4+), but if you hear nothing, use the **Test** button in the points panel; it tells you when the browser blocks the sound. Audio can't play while the screen is locked or the app is in the background.
+- **iPhone sound:** the in-app beep needs the volume up and the app open. The native notification beep plays backgrounded but obeys the ring/silent switch and the per-app Sounds setting — a muted phone gets silent alerts. If you hear nothing, use the **Test** button in the points panel; it tells you when the browser blocks the sound. Audio can't play while the screen is locked or the app is in the background.
 
 ## Project layout
 
@@ -138,19 +151,21 @@ src/
   lib/
     alarm.svelte.ts            All state: permission, position, zone, alarm timer
     geo.ts                     Haversine distance, formatting
-    notify.ts                  Notification permission + showNotification (web) or local-notifications (native shell)
-    beep.ts                    Generated WAV beep played via <audio> (needs a tap first)
-    location-provider.ts       Position source: web watchPosition or native background watcher
+    notify.ts                  Notification permission + showNotification (web) or local-notifications (native shell, beep gated by toggle)
+    beep.ts                    Generated WAV beep played via <audio> (needs a tap first, foreground only)
+    location-provider.ts       Position source: web watchPosition, native background watcher, silent permission probe, platform helpers
     native-setup.ts            Native shell permissions (background location, battery exemption)
     components/
-      NativeSetup.svelte       Native shell permission prompts (Android only)
+      NativeSetup.svelte       Android-only permission prompts (hidden on iOS)
       AlarmMap.svelte          Leaflet map, saved points, draft point, user dot
       ControlPanel.svelte      New point radius, "Notify for", Add point / Start / Turn off
-      ZonesPanel.svelte        Right sidebar: all points, on/off toggle, rename, radius, delete
+      ZonesPanel.svelte        Right sidebar: all points, on/off toggle, rename, radius, delete, version footer
       ShareLocation.svelte     Shown instead of the map without location access
-      InstallHint.svelte       Closable PWA install card
+      InstallHint.svelte       Closable PWA install card (never in native shells)
   routes/                      +layout.ts (ssr off), +layout.svelte, +page.svelte
 static/                        manifest.webmanifest, icons
+LICENSE                        MIT (cubiq.lat)
 android/                       Capacitor shell (committed: manifest, sound, icons, platform code)
-capacitor.config.ts            Shell config: webDir build, legacy bridge, notification sound
+ios/                           Capacitor shell (committed: plist, sound, icons, platform code)
+capacitor.config.ts            Shell config: appId lat.cubiq.geoalarm, webDir build, legacy bridge, notification sound
 ```

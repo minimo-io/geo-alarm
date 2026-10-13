@@ -1,7 +1,7 @@
 import { distanceMeters, type LatLng } from './geo';
 import { ensureNotificationPermission, notify } from './notify';
 import { playBeep } from './beep';
-import { startPositionDelivery } from './location-provider';
+import { isNative, probeNativePermission, startPositionDelivery } from './location-provider';
 
 export type LocationPermission = 'checking' | 'prompt' | 'granted' | 'denied' | 'unsupported';
 
@@ -16,7 +16,8 @@ export type Zone = {
 	enabled: boolean;
 };
 
-export const NOTIFY_EVERY_MS = 10_000;
+const EVERY_KEY = 'geoalarm:notify-every:v1';
+export const NOTIFY_EVERY_OPTIONS = [5, 10, 15, 30, 60];
 const STORAGE_KEY = 'geoalarm:zones:v1';
 const SOUND_KEY = 'geoalarm:sound:v1';
 
@@ -43,6 +44,8 @@ class GeoAlarm {
 
 	/** Play a beep every time the alarm notifies. Can be switched off in the points panel. */
 	soundEnabled = $state(true);
+	/** Seconds between notifications while ringing. Set in the points panel. */
+	notifyEverySec = $state(10);
 
 	/** Zones that are currently inside their notification window. */
 	ringingIds = $state<string[]>([]);
@@ -71,10 +74,24 @@ class GeoAlarm {
 		this.#loadZones();
 		try {
 			this.soundEnabled = localStorage.getItem(SOUND_KEY) !== 'off';
+			const every = Number(localStorage.getItem(EVERY_KEY));
+			if (NOTIFY_EVERY_OPTIONS.includes(every)) this.notifyEverySec = every;
 		} catch {
-			/* keep default */
+			/* keep defaults */
 		}
 		this.#startPersisting();
+
+		// Native shells have no Permissions API (query throws), so probe silently:
+		// granted permission delivers a fix with no prompt, anything else stays shared-off.
+		if (isNative()) {
+			if (await probeNativePermission()) {
+				this.permission = 'granted';
+				this.#startWatching();
+			} else {
+				this.permission = 'prompt';
+			}
+			return;
+		}
 
 		if (!('geolocation' in navigator)) {
 			this.permission = 'unsupported';
@@ -142,6 +159,13 @@ class GeoAlarm {
 			$effect(() => {
 				try {
 					localStorage.setItem(SOUND_KEY, this.soundEnabled ? 'on' : 'off');
+				} catch {
+					/* ignore */
+				}
+			});
+			$effect(() => {
+				try {
+					localStorage.setItem(EVERY_KEY, String(this.notifyEverySec));
 				} catch {
 					/* ignore */
 				}
@@ -271,7 +295,7 @@ class GeoAlarm {
 		const latest = ends.length ? Math.max(...ends) : Infinity;
 		this.ringRemainingSec = Number.isFinite(latest) ? Math.max(Math.ceil((latest - now) / 1000), 0) : null;
 
-		if (ringing.length && now - this.#lastNotifyAt >= NOTIFY_EVERY_MS) {
+		if (ringing.length && now - this.#lastNotifyAt >= this.notifyEverySec * 1000) {
 			this.#lastNotifyAt = now;
 			if (this.soundEnabled) void playBeep();
 			const names = ringing.map((z) => z.name);
@@ -285,7 +309,7 @@ class GeoAlarm {
 
 	/**
 	 * Web apps cannot track location in the background. Keeping the screen awake
-	 * keeps the page (and the 10 s notification loop) running while the alarm is on.
+	 * keeps the page (and the notification loop) running while the alarm is on.
 	 */
 	async #requestWakeLock() {
 		try {

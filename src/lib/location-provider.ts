@@ -22,6 +22,51 @@ export function isAndroid(): boolean {
 }
 
 /**
+ * Silent permission probe for cold start (native only). Adds a watcher with
+ * `requestPermissions: false`, so the OS never prompts: granted permission
+ * delivers a fix, anything else rejects (Android) or stays quiet (iOS).
+ * Resolves true on the first fix, false after a short wait. Always cleans up.
+ */
+export function probeNativePermission(): Promise<boolean> {
+	return new Promise((resolve) => {
+		let done = false;
+		let currentId: string | null = null;
+		const finish = (v: boolean) => {
+			if (!done) {
+				done = true;
+				resolve(v);
+			}
+		};
+		const stop = (id: string | null) => {
+			if (id !== null) void BgGeo.removeWatcher({ id }).catch(() => {});
+		};
+		void BgGeo.addWatcher(
+			{
+				backgroundMessage: 'Geo Alarm is watching your points.',
+				backgroundTitle: 'Geo Alarm is on',
+				requestPermissions: false,
+				stale: false,
+				distanceFilter: 0
+			},
+			(loc, err) => {
+				if (loc && !err) {
+					finish(true);
+					stop(currentId);
+				}
+			}
+		).then((id) => {
+			currentId = id;
+			if (done) stop(id);
+			else
+				setTimeout(() => {
+					finish(false);
+					stop(id);
+				}, 2500);
+		}, () => finish(false));
+	});
+}
+
+/**
  * Deliver position fixes to `onpos`. Web uses `watchPosition` (unchanged
  * behaviour); native uses the background-geolocation watcher, which keeps
  * delivering with the app backgrounded (Android foreground service).

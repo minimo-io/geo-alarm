@@ -26,9 +26,11 @@ This is the original brief for the project, verbatim. Treat it as the source of 
 - The sidebar (`ZonesPanel.svelte`) opens from the right; it has a backdrop on phones only (`md:hidden`).
 
 - "Set it" = a **Set alarm** button that arms the alarm using the current pointer and radius.
-- "For the time the geo alarm is on, or for a configured set of seconds" = **Notify for** (`alarm.notifyForSec`): once the alarm *fires* (the phone enters a point), notify every 10 s for that many seconds, then stop notifying. `0` = keep notifying until the user leaves the point or turns the alarm off. This is **not** an auto-off timer: the alarm itself stays armed until the user turns it off.
+- "For the time the geo alarm is on, or for a configured set of seconds" = **Notify for** (`alarm.notifyForSec`): once the alarm *fires* (the phone enters a point), notify repeatedly for that many seconds, then stop notifying. `0` = keep notifying until the user leaves the point or turns the alarm off. This is **not** an auto-off timer: the alarm itself stays armed until the user turns it off.
 - Fire / re-fire rule: the notification window opens per point when the phone goes from outside to inside. Leaving the point (or disabling/deleting it) resets it, so entering again fires again. Logic lives in `#tick()` in `src/lib/alarm.svelte.ts`.
-- Notification interval is a constant: `NOTIFY_EVERY_MS = 10_000` in `src/lib/alarm.svelte.ts`.
+- Notification interval is a setting: `notifyEverySec` in `src/lib/alarm.svelte.ts`
+  (options 5/10/15/30/60, default 10, persisted). The 1 s ticker fires when the
+  elapsed time passes the interval.
 - Without location permission the map must **not** render; show `ShareLocation.svelte` instead.
 - The install hint must be closable, remember dismissal, and never show when already installed (`display-mode: standalone`).
 

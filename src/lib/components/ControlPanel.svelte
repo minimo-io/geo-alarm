@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { alarm, NOTIFY_EVERY_MS } from '../alarm.svelte';
+	import { alarm } from '../alarm.svelte';
 	import { formatMeters } from '../geo';
 	import { isAndroid, isNative } from '../location-provider';
 	import NativeSetup from './NativeSetup.svelte';
@@ -63,7 +63,7 @@
 			{#if alarm.activeZones.length === 0}
 				<p class="text-sm">Every point is turned off. Turn one on in the points list.</p>
 			{:else if alarm.ringingZones.length}
-				<p class="text-sm">Notifying every {NOTIFY_EVERY_MS / 1000} seconds. Keep this screen open.</p>
+				<p class="text-sm">Notifying every {alarm.notifyEverySec} seconds. Keep this screen open.</p>
 			{:else if alarm.inside}
 				<p class="text-sm">Notifications finished. They start again when you leave and re-enter.</p>
 			{/if}
