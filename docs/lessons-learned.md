@@ -94,6 +94,15 @@
   implementation, so every check rejects and its rows can never clear on iOS.
 - iOS `AppIcon.appiconset` needs a real 1024 universal icon (from `static/icons/icon-512.png`,
   full-bleed, not the maskable). `cap add` leaves Capacitor's stock icon in place.
+- App Store rejects icons with an alpha channel (`file` must say RGB, not RGBA).
+  Source the maskable (full-bleed), flatten onto theme teal `#0f2a26` at 1024 with ffmpeg
+  (`overlay` + `format=rgb24`, `-frames:v 1` or muxing fails). No PIL or ImageMagick needed.
+- Set `ITSAppUsesNonExemptEncryption=false` in `Info.plist` (app uses OS HTTPS only):
+  each upload then skips the export-compliance questionnaire in Connect.
+- Background beep on iOS comes from the notification sound, never the in-page `<audio>`
+  (suspended in background). The wav must ship in the bundle root: copy to `ios/App/App/`
+  and register file ref + Resources build phase in `project.pbxproj`. Verify with
+  `find .../App.app -name <sound>.wav`. `notify()` gates `sound` on the Beep toggle.
 - Native drawer padding: coarse-pointer media query zeroes `--panel-bottom`, and native
   shells are coarse pointers. Flag them with `html.native` (toggled in `+layout.svelte`)
   giving a `max(12px, safe-area)` floor; web PWA and desktop unchanged.

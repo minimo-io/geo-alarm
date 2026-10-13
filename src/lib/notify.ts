@@ -24,13 +24,23 @@ export async function ensureNotificationPermission(): Promise<NotificationPermis
  * exist, so it uses the local-notifications plugin (same fixed id replaces the
  * previous alert, like `tag` does on the web).
  */
-export async function notify(title: string, body: string): Promise<void> {
+export async function notify(title: string, body: string, sound = true): Promise<void> {
 	if (Capacitor.isNativePlatform()) {
 		try {
 			// Immediate, tolerance-friendly alert: never exact, so the OS never
 			// holds the call for the Alarms & reminders permission screen.
+			// The bundled beep is the only sound that plays while backgrounded;
+			// the in-page <audio> beep is foreground-only by OS design.
 			await LocalNotifications.schedule({
-				notifications: [{ title, body, id: 7, isExactNotification: false, sound: 'geoalarm_beep.wav' }]
+				notifications: [
+					{
+						title,
+						body,
+						id: 7,
+						isExactNotification: false,
+						...(sound ? { sound: 'geoalarm_beep.wav' } : {})
+					}
+				]
 			});
 		} catch {
 			/* permission denied: stay silent */

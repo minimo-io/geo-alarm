@@ -277,7 +277,8 @@ class GeoAlarm {
 			const names = ringing.map((z) => z.name);
 			notify(
 				names.length > 1 ? `You are inside ${names.length} alarm areas` : `You are inside ${names[0]}`,
-				names.length > 1 ? names.join(', ') : 'Geo Alarm is on. Open the app to turn it off.'
+				names.length > 1 ? names.join(', ') : 'Geo Alarm is on. Open the app to turn it off.',
+				this.soundEnabled
 			);
 		}
 	}

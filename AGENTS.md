@@ -147,6 +147,11 @@ Run commands live in `README.md` → `## iOS app`. Do not duplicate them here.
 - Use a short plain summary in repo history style; state scope and result.
 - Never suggest or plan a version bump, commit, or push on your own. The user
   always gives those instructions; wait for them.
+- Version numbers: `package.json` for web releases. iOS keeps two numbers in
+  `project.pbxproj`: `MARKETING_VERSION` (user-visible, e.g. 1.0 — bump rarely)
+  and `CURRENT_PROJECT_VERSION` (integer build number, +1 per TestFlight upload,
+  invisible to users). Android keeps `versionCode` (integer, +1 per Play upload)
+  and `versionName` in `android/app/build.gradle`.
 
 ## General Guidelines
 
